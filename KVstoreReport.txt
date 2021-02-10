@@ -1,0 +1,38 @@
+This project was a simple KV Store that I had a lot of trouble with in the first place. I had a lot of areas when I was starting, from things as simple as 
+how to send a message between the server in the client, to parsing the message. I also had a significant amount of trouble with the creation of the driver file,
+as I have never had to do something like that before. One of the things I am most proud if is how I was able to have the clients be able to disconnect from the server
+through a disconnect message. The way I have been running my code is to first start the server in a seperate window, then run Alice mpy and then Bob.py.
+
+These are the cases that get tested in my KV store.
+1) Storing a KV pair.
+2) Getting a KV Pair.
+3) Storing multiple KV pairs at once.
+4) Getting multiple KV Pairs at once.
+5) Overwriting a Value in a KV Pair.
+6) Trying to get a Value when the key does not exits. (once and then multiple times in a row)
+
+Here is a log after running Alice.py
+
+PS C:\Users\GeeBa\Documents\iugithub\DistSys> & C:/Users/GeeBa/anaconda3/python.exe c:/Users/GeeBa/Documents/iugithub/DistSys/Server.py
+Starting server
+keys after alice stores: 
+{'key': 'ADifferentValue', 'password': 'Longsword', 'key1': 'value1', 'key2': 'value2', 'key3': 'value3', 'key4': 'value4'}
+
+Here is a log for the terminal running the clients
+
+GeeBa@DESKTOP-KTN22LB MINGW64 ~/Documents/iugithub/DistSys (main)
+$ python Alice.py
+
+GeeBa@DESKTOP-KTN22LB MINGW64 ~/Documents/iugithub/DistSys (main)
+$ python Bob.py
+key:ADifferentValue
+password:Longsword
+username: Key Value Pair does not exist
+key1:value1
+key2:value2
+key3:value3
+key4:value4
+key5: Key Value Pair does not exist
+key6: Key Value Pair does not exist
+key7: Key Value Pair does not exist
+key8: Key Value Pair does not exist
