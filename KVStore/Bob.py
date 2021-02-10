@@ -10,7 +10,7 @@ def GetKV(key):   #this is a function that will get the value from the server
     msg = "GET "+ key
     client.send(msg.encode("utf-8")) #sends a message to server to indicate wanting a key value
     print(client.recv(1024).decode("utf-8")) #recieves the value
-
+print("\n\n Getting keys in Bob")
 GetKV("key")  #the key will have the value that is the rewrote one
 GetKV("password")  #this will be longsword
 GetKV("username")  #there is no username

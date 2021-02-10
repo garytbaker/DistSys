@@ -23,8 +23,7 @@ def handleClient(conn,addr): #This is a function to handle the what happens when
                             stillConnected = False  
                     else:
                         KVStore[pair.split("=")[0]]=pair.split("=")[1] #add the pairs to the dictionary
-            print("keys after alice stores: ")
-            print(KVStore)
+
             if(data[0:3] == "GET"): #if the client is getting a pair
                 parsedDataGet = data.split("GET")#get the keys they want to get
                 parsedDataGet.pop(0)#remove the empty first item
@@ -37,7 +36,6 @@ def handleClient(conn,addr): #This is a function to handle the what happens when
                     else:
                         msg = key +": Key Value Pair does not exist" #otherwise say it does not exist
                         conn.send(msg.encode("utf-8"))
-
 
     conn.close
 
