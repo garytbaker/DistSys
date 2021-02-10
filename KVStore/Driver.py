@@ -2,9 +2,9 @@ import os
 import threading
 import time
 
-server = "python Server.py"
-alice = "python Alice.py"
-bob = "python Bob.py"
+server = "python KVStore/Server.py"
+alice = "python KVStore/Alice.py"
+bob = "python KVStore/Bob.py"
 
 thread = threading.Thread(target=os.system,args=(server,)) #using threading to handle clients
 thread.start()

@@ -12,7 +12,7 @@ def sendKV(key , value):   #this sends a key value pair to the server
     msg = "STORE " + key + "=" + value
     client.send((msg).encode("utf-8"))
 
-print("storing following keys from alice\nkey:value\npassword:Longsword\nkey:ADifferentValue\nkey1:Value1\nkey2:Value2\nkey3:Value3\nkey4:Value4")
+print("STORING THE FOLLOWING KEYS FROM ALICE\nkey:value\npassword:Longsword\nkey:ADifferentValue\nkey1:Value1\nkey2:Value2\nkey3:Value3\nkey4:Value4")
 sendKV("key","value")#sends a bunch of key value pairs to the server
 sendKV("password","Longsword")
 sendKV("key","ADifferentValue")  #what happens when you send a value to the same key it should overwrite it

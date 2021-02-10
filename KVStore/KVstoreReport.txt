@@ -42,9 +42,9 @@ key8: Key Value Pair does not exist
 
 If you run driver.py, you should recieve the following output:
 
-PS C:\Users\GeeBa\Documents\iugithub\DistSys> & C:/Users/GeeBa/anaconda3/python.exe c:/Users/GeeBa/Documents/iugithub/DistSys/Driver.py
+PS C:\Users\GeeBa\Documents\iugithub\DistSys> & C:/Users/GeeBa/anaconda3/python.exe c:/Users/GeeBa/Documents/iugithub/DistSys/KVStore/Driver.py
 Starting server
-storing following keys from alice
+STORING THE FOLLOWING KEYS FROM ALICE
 key:value
 password:Longsword
 key:ADifferentValue
@@ -53,8 +53,7 @@ key2:Value2
 key3:Value3
 key4:Value4
 
-
- Getting keys in Bob
+GETTING KEYS IN BOB
 key:ADifferentValue
 password:Longsword
 username: Key Value Pair does not exist
