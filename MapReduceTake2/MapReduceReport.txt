@@ -1,0 +1,45 @@
+In this project I have implemented a map reduce system. To run my code simply run the main in the Driver.
+I have included sample output as well. They are categorized by funtionality and number of mappers and reducers
+I start by creating a MapAndReduce class which will instantiate a number of map and reducers. 
+The API for the User is as follows
+
+MapReduce(inputFiles,numMappers,numReducers,mapFunc,reduceFunc,OutputFile)
+
+I use a class for the mappers and the reducers and I 
+
+starts servers for the mappers and reducers on different processes
+distributes mapper data evenly
+Runs mappers over data in parallel across Processes
+waits for all mappers to finish
+Mappers organize data to send to the master
+Mappers Signal to Master they are done
+Master signals to mappers to send data to the reducers
+mappers send data to reducers then signals master that they are done
+Master signals reducers to start
+runs the reducers in parallel across processes
+waits for all reducers to finish
+reducers send data back to the master
+aggregates the data into the designated outputfile 
+
+I have had a lot of challenges along the way. I think if we had had started code than I would have felt 
+more guided as I did not know how to start and I had no indication if I was going in the right direction. 
+I spawn a bunch of files, and I have included them all for all 12 tests I ran. If you run Master.py to
+do this then the files would be spawned like this. I talked to Tingyi and walked through how my code works
+with him and he said that this is fine as long as it is documented like I did above. I did both the word count
+and reverse index applications as well as making it to where my code could take functions for the mappers and 
+the reducers. Also, I have left some printing in there as you can see that it runs things in parrallel because
+when it gets the the end of the mapper/reducer that is printing, it will stall while it is waiting for the 
+others to finish.
+
+TEST CASES:
+    -equal number of Mappers and reducers
+    -More Mappers than Reducers
+    -More Reducers than Mappers
+    -More Mappers and Reducers than input files
+    -Small files
+    -When Mappers and Reducers have no data passed to them(via a bad hash, or small # of files, or small files)
+    -Running multiple Map Reduce Processes concurrently
+
+THINGS I DID FOR BONUS
+    -I made the mappers and reducers take any function(as long as it takes a file and returns the corect format of string)
+    -I use KVSTORES to store data and pas it in pickles

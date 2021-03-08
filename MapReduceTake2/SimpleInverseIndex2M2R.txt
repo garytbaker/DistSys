@@ -1,0 +1,8 @@
+word=bc file=test4 count=1, file=test5 count=1
+word=ef file=test4 count=1
+word=ze file=test5 count=1
+word=a file=test4 count=1, file=test5 count=1
+word=c file=test4 count=2
+word=d file=test4 count=1, file=test5 count=1
+word=x file=test5 count=1
+word=y file=test5 count=1

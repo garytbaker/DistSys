@@ -1,0 +1,8 @@
+word=bc   count=2
+word=ef   count=1
+word=ze   count=1
+word=a   count=2
+word=c   count=2
+word=d   count=2
+word=x   count=1
+word=y   count=1

@@ -1,0 +1,318 @@
+
+import socket
+import threading
+from multiprocessing import Process
+import time
+import pickle
+import sys
+
+HOST = '127.0.0.1' # Standard loopback interface address (localhost)
+PORT = 2333 # Port to listen on (non-privileged ports are > 1023)
+NEWPORT = 2334
+KVStore = {} #this is the Key Value storage
+mappersFinished = 0
+reducersFinished = 0
+sentToReducers = 0
+output = ""
+processes = []
+def handleMappers(conn,addr): #This is a function to handle the what happens when a client connects to the server 
+    global mappersFinished,sentToReducers
+    data = conn.recv(1024).decode("utf-8")  #decode the data
+    if data == "mapperDone":
+        mappersFinished += 1
+    if data == "sentToReducers":
+        sentToReducers +=1
+
+
+def handleReducers(conn,addr): #This is a function to handle the what happens when a client connects to the server 
+    global output,reducersFinished
+    codedData = b"" #decode the data
+    while True:
+        bits= conn.recv(4096) #decode the data
+        if not bits:
+            break
+        codedData += bits
+    newData = pickle.loads(codedData)
+    data = newData["data"]
+    reducersFinished += 1
+    print("reducerFinished:" +str(reducersFinished))
+    output += data
+
+def MapReduce(inputFiles,numMappers,numReducers,mapFunc,reduceFunc,OutputFile):
+    global NEWPORT
+    mappers = []
+    reducers = []
+    filesToMappers = []
+    for _ in range(numMappers):
+        filesToMappers.append(dict())
+    print(filesToMappers)
+    fileIndex = 0
+    for ifile in inputFiles:
+        currFile = open(ifile,"r")
+        print(fileIndex)
+        filesToMappers[fileIndex][ifile] = currFile.read()
+        currFile.close()
+        fileIndex +=1
+        fileIndex =fileIndex %numMappers
+    
+    for i in range(numMappers):
+        mappers.append(NEWPORT)
+        print("multiProcessing")
+        newp = Process(target=createMapper, args = (NEWPORT,))
+        newp.start()
+        processes.append(newp)
+        NEWPORT += 1
+
+    for i in range(numReducers):
+        reducers.append(NEWPORT)
+        
+        newp = Process(target=createReducer, args=(NEWPORT,))
+        newp.start()
+        processes.append(newp)
+        NEWPORT +=1
+   
+    print("mappers : " + str(mappers) + "\n")    
+    print("reducers : " + str(reducers) + "\n")
+
+    time.sleep(1)
+
+    for i in range(numMappers):
+        messageDict = {"reducers": reducers,"mapFunc":mapFunc,"reduceFunc":reduceFunc,"data":filesToMappers[i],"numMappers":numMappers}
+        msg = pickle.dumps(messageDict)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: #starting the server
+            print("mappers[i] : "+ str(mappers[i])+ "\n")
+            s.connect((HOST,mappers[i]))
+            s.send(msg)
+        
+            
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: #starting the server
+        s.bind((HOST, PORT))
+        s.listen() #listens for clients
+        print("Starting server")
+
+        while mappersFinished<numMappers:
+            conn, addr = s.accept() #waits for clients
+    
+                
+                #Add operation here, if else statement to check input key values
+                
+            thread = threading.Thread(target=handleMappers,args=(conn,addr)) #using threading to handle clients
+            thread.start()
+            time.sleep(.05)
+
+    for i in range(numMappers):
+        msg = "SendToReducers"
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: #starting the server
+            s.connect((HOST,mappers[i]))
+            s.send((msg).encode("utf-8"))
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: #starting the server
+        s.bind((HOST, PORT))
+        s.listen() #listens for clients
+        print("Starting server")
+
+        while sentToReducers<numMappers:
+            conn, addr = s.accept() #waits for clients
+    
+                
+                #Add operation here, if else statement to check input key values
+                
+            thread = threading.Thread(target=handleMappers,args=(conn,addr)) #using threading to handle clients
+            thread.start()
+            time.sleep(.05)
+
+    for i in range(numReducers):
+        msg = "start"
+        startmsg = pickle.dumps(msg)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: #starting the server
+            s.connect((HOST,reducers[i]))
+            s.send((startmsg))
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: #starting the server
+        s.bind((HOST, PORT))
+        s.listen() #listens for clients
+        print("Starting server")
+
+        while reducersFinished<numReducers:
+            conn, addr = s.accept() #waits for clients
+    
+                
+                #Add operation here, if else statement to check input key values
+            print("handleReducer")   
+            thread = threading.Thread(target=handleReducers,args=(conn,addr)) #using threading to handle clients
+            thread.start()
+            time.sleep(.05)
+    finalFile = open(OutputFile,"w")
+    finalFile.write(output)
+    finalFile.close()
+    for p in processes:
+        p.terminate()
+
+def createMapper(portNum):
+    print("making mappers")
+    sys.stdout.flush()
+    newMapper = mapper(portNum)
+    while newMapper != None:
+        pass
+
+def createReducer(portNum):
+    newReducer = reducer(portNum)
+    while newReducer !=None:
+        pass
+
+class mapper:
+    def __init__(self,portNum):
+        print("mapper initialized\n")
+        sys.stdout.flush()
+        self.portNum = portNum
+        self.dataRecieved = False
+        self.waitingForSignalToSendToReducers = True
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: #starting the server
+            s.bind((HOST, self.portNum))
+            s.listen() #listens for clients
+            print("Starting mapper")
+            sys.stdout.flush()
+
+            while not self.dataRecieved:
+                conn, addr = s.accept() #waits for clients
+        
+                    
+                    #Add operation here, if else statement to check input key values
+                    
+                self.recieveData(conn,addr)
+                time.sleep(.05)
+            s.close()
+            print("outsideOfLoop\n")
+            sys.stdout.flush()
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: #starting the server
+            s.connect((HOST,PORT))
+            print("sendingmapperDone\n")
+            sys.stdout.flush()
+            s.send(("mapperDone").encode("utf-8"))
+            s.close()
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: #starting the server
+            s.bind((HOST, self.portNum))
+            s.listen() #listens for clients
+
+            while self.waitingForSignalToSendToReducers:
+                conn, addr = s.accept() #waits for clients
+                sendMsg = (conn.recv(4096).decode("utf-8"))
+                if sendMsg == "SendToReducers":
+                    print("sendingToReducers\n")
+                    sys.stdout.flush()
+                    self.sendToReducers()
+
+
+    def recieveData(self,conn,args):
+        print("mapperRecievedData\n")
+        sys.stdout.flush()
+        codedData = b""
+        while True:
+            bits= conn.recv(4096) #decode the data
+            if not bits:
+                break
+            codedData += bits
+        msgFromMaster = pickle.loads(codedData)
+        self.reducers = msgFromMaster["reducers"]
+        self.mapFunc = msgFromMaster["mapFunc"]
+        self.reduceFunc = msgFromMaster["reduceFunc"]
+        self.data = msgFromMaster["data"]
+        self.numMappers = msgFromMaster["numMappers"]
+        self.startMapper()
+        self.dataRecieved = True
+        
+    def startMapper(self):
+        print("startMapper\n")
+        print(len(self.reducers))
+        sys.stdout.flush()
+        
+        self.MapperKVStore = self.mapFunc(self.data)
+        if self.MapperKVStore ==None:
+            pass
+        else:
+            self.sendingKVStore = dict()
+            for i in range(len(self.reducers)):
+                self.sendingKVStore[i] = dict()
+            for key in self.MapperKVStore:
+                reducerNumber = len(key) % len(self.reducers)
+                self.sendingKVStore[reducerNumber][key] = self.MapperKVStore[key]
+
+    def sendToReducers(self):
+        print("sendingToReducers\n")
+        sys.stdout.flush()
+        if self.MapperKVStore != None:
+            for i in range(len(self.reducers)):
+                sendDict = {"reduceFunc":self.reduceFunc,"data":self.sendingKVStore[i],"numMappers":self.numMappers}
+                msg = pickle.dumps(sendDict)
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: #starting the server
+                    s.connect((HOST,self.reducers[i]))
+                    s.send(msg)
+                    s.close()
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: #starting the server
+            s.connect((HOST,PORT))
+            s.send(("sentToReducers").encode("utf-8"))
+            s.close()
+        del(self)
+
+
+class reducer:    
+    def __init__(self,portNum):
+        self.portNum = portNum
+        self.dataRecieved = 0
+        self.inputs = []
+        self.numMappers = 1000
+        self.startBool = False
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: #starting the server
+            s.bind((HOST, self.portNum))
+            s.listen() #listens for clients
+            print("Starting reducer")
+            sys.stdout.flush()
+            while not self.startBool:
+                conn, addr = s.accept() #waits for clients
+        
+                    
+                    #Add operation here, if else statement to check input key values
+                    
+                self.recieveData(conn,addr)
+                
+            s.close()
+        self.startReducer()
+        self.sendToMaster()
+    
+    def recieveData(self,conn,args):
+        print("reducerRecieveData")
+        sys.stdout.flush()
+        codedData = b"" #decode the data
+        while True:
+            bits= conn.recv(4096) #decode the data
+            if not bits:
+                break
+            codedData += bits
+        msgFromMapper = pickle.loads(codedData)
+        if msgFromMapper =="start":
+            self.startBool = True
+        else:
+            self.numMappers = msgFromMapper["numMappers"]
+            self.reduceFunc = msgFromMapper["reduceFunc"]
+            newData = msgFromMapper["data"]
+            self.inputs.append(newData)
+            self.dataRecieved +=1           
+
+    def startReducer(self):
+        time.sleep(2)
+        print("reducerstartReducer")
+        sys.stdout.flush()
+        self.finaldata = self.reduceFunc(self.inputs)
+
+    def sendToMaster(self):
+        print("reducerSendToMaster")
+        sys.stdout.flush()
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: #starting the server
+            s.connect((HOST,PORT))
+            dataToMaster = dict()
+            dataToMaster["data"] = self.finaldata
+            msgToMaster = pickle.dumps(dataToMaster)
+            s.send(msgToMaster)
+            s.close()
+        del(self)
